@@ -1,0 +1,19 @@
+{
+    "kelly": {
+        "balance": [
+            70
+        ],
+        "history": [
+            "Recieved 40 from amina\n"
+        ]
+    },
+    "amina": {
+        "balance": [
+            960
+        ],
+        "history": [
+            "Transferred 40 to kelly\n",
+            "Deposited 500\n"
+        ]
+    }
+}
