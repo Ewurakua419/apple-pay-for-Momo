@@ -3,7 +3,7 @@ import uuid
 import json
 from models.wallet import Wallet
 class User:
-    def __init__(self, name, password, balance=100):
+    def __init__(self, name, password, balance=0):
         self.name=name
         self.unique_id = uuid.uuid4()
         self.wallet=Wallet(balance, user=self)

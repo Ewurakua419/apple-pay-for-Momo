@@ -3,6 +3,7 @@ import uuid
 import json
 from models.user import User
 from models.transaction import Transaction
+import database
 class Bank:
     def __init__(self):
         self.users={}
@@ -27,6 +28,7 @@ class Bank:
                 print('User already exists')
                 return False
         user=User(name=name,password=password)
+        database.register(name=name,password=password,balance=0)
         self.adduser(user=user)
 
 
