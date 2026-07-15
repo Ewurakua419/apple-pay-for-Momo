@@ -3,6 +3,7 @@ import uuid
 import json
 from user import User
 from transaction import Transaction
+import database
 class Wallet:
     def __init__(self,balance,user:'User', ids=None):
         self.balance=balance
@@ -34,6 +35,7 @@ class Wallet:
             return self.balance
         self.balance+=amt
         histlist=f"Deposited {amt}"
+        database.deposit(userid=self.user.getId(),balance=self.balance)
         self.transactions.append(Transaction(reciever=self.user.name, sender=sender, amount=amt, types='Deposit'))
         self.history(histlist)
         return self.balance
@@ -48,7 +50,7 @@ class Wallet:
         else:
             self.balance-=amt
             histlist=f"Withdrew {amt}"
-            
+            database.withdraw(userid=self.user.getId(), balance=self.balance)
             self.transactions.append(Transaction(reciever=reciever, sender=self.user.name, amount=amt, types='Withdraw'))
             self.history(histlist)
             return self.balance

@@ -3,15 +3,13 @@ import uuid
 import json
 from models.user import User
 from models.transaction import Transaction
+from typing import Optional
 import database
 class Bank:
     def __init__(self,name):
         self.name=name
-        self.users={}
-        self.curr=User
-
-    def adduser(self, user:'User'):
-        self.users[user.unique_id]=user
+        self.sample=User('Sample',' ',unique_id='0000',ids='0000')
+        self.curr=self.sample
 
 
     def finduser(self, name):
@@ -22,17 +20,16 @@ class Bank:
             return False
         else:
                 print('User found')
-                return rows
+                user=User(name=rows[1],password=rows[2],unique_id=rows[0],ids=rows[3], balance=rows[4])
+                return user
             
         
     def register(self, name, password):
-        for item in self.users.values():
-            if name==item.name:
-                print('User already exists')
-                return False
+        if database.search(name)!=None:
+            print('User already exists')
+            return False
         user=User(name=name,password=password)
         database.register(name, userid=user.getId(),ids=user.wallet.getid(),balance=user.wallet.check_bal(), password=password)
-        self.adduser(user=user)
         self.curr=user
         print("Successful")
         return True
@@ -42,8 +39,8 @@ class Bank:
     def login(self, name, password):
         rows=self.finduser(name)
         if rows != None and rows != False:
-                if password==rows[2]:
-                    self.curr=User(name=rows[1],password=rows[2],unique_id=rows[0],ids=rows[3], balance=rows[4])
+                if password==rows.password:
+                    self.curr=rows
                     print('logged in')
                     return True
                 
@@ -58,7 +55,7 @@ class Bank:
             return False
 
         receiver = self.finduser(name)
-        if receiver == self.curr:
+        if receiver == self.curr.name:
             print("Cannot transfer to yourself.")
             return False
         if not receiver:
@@ -67,54 +64,11 @@ class Bank:
         self.curr.wallet.transferin(amt, receiver)
 
     def logout(self):
-        if self.curr is None:
+        if self.curr==self.sample:
                 print("login first")
                 return False
-        self.close()
-        self.curr=None
+        self.curr=User('Sample',' ',unique_id='0000',ids='0000')
         print("Logged out.")
         return True
     
-    def close(self):
-        try:
-            with open("users.json", "r") as file:
-                data = json.load(file)
-        except (FileNotFoundError, json.JSONDecodeError):
-            data = {}
-        data['Users']=[
-            user.to_dict()
-            for user in self.users.values()
-        ]
-        with open("users.json", "w") as file:
-                json.dump(data, file, indent=4)
-
-    def open(self):
-        try:
-            with open("users.json", "r") as file:
-                data = json.load(file)
-        except (FileNotFoundError, json.JSONDecodeError):
-            data={}
-        self.users={}
-        for user_data in data.get("Users", []):
-            user = User(
-                name=user_data["name"],
-                password=user_data["password"],
-                balance=user_data["balance"]
-            )
-
-            user.unique_id = uuid.UUID(user_data["id"])
-            for t in user_data.get("transaction", []):
-                transaction = Transaction(
-                    amount=t["amount"],
-                    types=t["type"],
-                    sender=t["sender"],
-                    reciever=t["receiver"]
-                )
-
-                transaction.timestamp = datetime.fromisoformat(t["timestamp"])
-                user.wallet.transactions.append(transaction)
-
-
-            self.users[user.unique_id] = user
-
-        
+   
