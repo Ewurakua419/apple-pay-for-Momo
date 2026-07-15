@@ -23,9 +23,9 @@ def search(user):
     with connect() as conn:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT user.*,wallets.id, wallets.balance
-                FROM wallets, users
-                JOIN users ON wallets.user_id = users.id
+                SELECT users.*,wallet.id, wallet.balance
+                FROM wallet
+                JOIN users ON wallet.user_id = users.id
                 WHERE users.username = %s
                 """, (user,))
             rows = cur.fetchone()
@@ -39,15 +39,14 @@ def withdraw(userid:str, balance:int):
             """balance=rows[2]
 
             balance-=amt"""
-            cur.execute("update wallets set balance= %s where userid=%s",(balance,userid))
+            cur.execute("update wallet set balance= %s where user_id=%s",(balance,userid))
             conn.commit()
 
 def register(name:str, balance:int, password:str, ids:str, userid:str):
     with connect() as conn:
         with conn.cursor() as cur:
-            dates=date.today()
-            cur.execute("Insert into users(id, username, password, created_at)  values (%s,%s,%s,%s)",(userid, name, password, dates))
-            cur.execute("Insert into wallets(id, user_id, balance) values (%s,%s,%s)",(ids,userid, balance))
+            cur.execute("Insert into users(id, username, password)  values (%s,%s,%s)",(userid, name, password))
+            cur.execute("Insert into wallet(id, user_id, balance) values (%s,%s,%s)",(ids,userid, balance))
             conn.commit()
 
 def deposit(userid:str, balance:int ):
@@ -55,7 +54,7 @@ def deposit(userid:str, balance:int ):
         with conn.cursor() as cur:
             """balance=rows[2]
             balance+=amt"""
-            cur.execute("update wallets set balance= %s where userid=%s",(balance,userid))
+            cur.execute("update wallet set balance= %s where user_id=%s",(balance,userid))
             conn.commit()
 
 def undo():

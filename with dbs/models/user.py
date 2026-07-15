@@ -6,11 +6,11 @@ class User:
     def __init__(self, name, password, balance=0, unique_id=None, ids=None):
         self.name=name
         if unique_id==None:
-            self.unique_id = str(uuid.uuid4())
+            self.unique_id = str(uuid.uuid4())[:20]
         else:
             self.unique_id=unique_id
         self.wallet=Wallet(balance, user=self, ids=ids)
-        self.password=password
+        self.password=str(password)
     
     def getId(self):
         return self.unique_id

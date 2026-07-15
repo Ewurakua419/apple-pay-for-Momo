@@ -1,17 +1,21 @@
+"""from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .user import User"""
 from datetime import datetime
 import uuid
 import json
-from user import User
-from transaction import Transaction
+#from .user import User
+from .transaction import Transaction
 import database
 class Wallet:
-    def __init__(self,balance,user:'User', ids=None):
+    def __init__(self,balance,user:"User", ids=None):
         self.balance=balance
         self.hist=[]
         self.user=user
         self.transactions=[]
         if ids==None:
-            self.ids=str(uuid.uuid4())
+            self.ids=str(uuid.uuid4())[:20]
         else:
             self.ids=ids
 
@@ -55,7 +59,7 @@ class Wallet:
             self.history(histlist)
             return self.balance
         
-    def transferin(self, amt:int, reciever:'User'):
+    def transferin(self, amt:int, reciever:"User"):
         if amt <= self.balance:
             self.withdraw(amt,reciever=reciever.name)
             reciever.wallet.deposit(amt,sender=self.user.name)
