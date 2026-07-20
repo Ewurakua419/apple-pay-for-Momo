@@ -14,11 +14,11 @@ class DepositRequest(BaseModel):
     amount: int
 
 class WithdrawRequest(BaseModel):
-    username: str
+    token: str
     amount: int
 
 class TransferRequest(BaseModel):
-    sender: str
+    token: str
     receiver: str
     amount: int
 
@@ -60,11 +60,12 @@ def deposit(data: DepositRequest, ):
     
 
 @app.post("/withdraw")
-def withdraw(amt:WithdrawRequest):
-    balance=bank.withdraw(amount=amt.amount,username=amt.username)
-    if balance is None:
-        return {"message": "User not found"}
-
+def withdraw(data:WithdrawRequest):
+    payload = auth.verify_token(data.token)
+    if payload is None:
+        raise HTTPException(401)
+    balance=bank.withdraw(payload["Username"],data.amount)
+    
     return{
         "message":"Withdrawal  succcessful",
         "balance":balance
@@ -72,10 +73,13 @@ def withdraw(amt:WithdrawRequest):
     
 @app.post("/transfer")
 def transfer(item:TransferRequest):
-    bank.transfer(sender_name=item.sender,reciever_name=item.receiver,amt=item.amount)
+    payload = auth.verify_token(item.token)
+    if payload is None:
+        raise HTTPException(401)
+    bank.transfer(sender_name=payload["Username"],reciever_name=item.receiver,amt=item.amount)
     return {
         "message": "Transfer completed",
-        "sender":item.sender,
+        "sender":payload["Username"],
         "recipient": item.receiver,
         "amount":item.amount
     }
