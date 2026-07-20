@@ -24,10 +24,10 @@ class Bank:
             
         
     def register(self, name, password):
-        if database.search(name)!=None:
+        if database.search(name)is not None:
             print('User already exists')
             return None
-        passworde=str(auth.encodere(password))
+        passworde=auth.encodere(password)
         user=User(name=name,password=passworde)
         database.register(name, userid=user.getId(),ids=user.wallet.getid(),balance=user.wallet.check_bal(), password=passworde)
         
@@ -37,15 +37,17 @@ class Bank:
 
 
     def login(self, name, password):
-        rows=self.finduser(name)
-        if rows != None and rows != False:
-                if auth.decodere(password=password,h=rows.password):
-                    return rows
-                
-                print('login unsuccessful:Wrong password')
-                return None
-        print('login unsuccessful:Username not found')
-        return None
+        rows = self.finduser(name)
+
+        if rows is None:
+            print("Login unsuccessful: Username not found")
+            return None
+
+        if not auth.decodere(password, rows.password):
+            print("Login unsuccessful: Wrong password")
+            return None
+
+        return rows
     
     def transfer(self,sender_name,reciever_name, amt:int):
         sender=self.finduser(sender_name)
