@@ -39,8 +39,9 @@ class Wallet:
             return self.balance
         self.balance+=amt
         histlist=f"Deposited {amt}"
-        database.deposit(userid=self.user.getId(),balance=self.balance)
+        tr=Transaction(reciever=self.ids, sender=sender, amount=amt, types='Deposit')
         self.transactions.append(Transaction(reciever=self.user.name, sender=sender, amount=amt, types='Deposit'))
+        database.deposit(userid=self.user.getId(),balance=self.balance,tr=tr)
         self.history(histlist)
         return self.balance
 
@@ -54,12 +55,13 @@ class Wallet:
         else:
             self.balance-=amt
             histlist=f"Withdrew {amt}"
-            database.withdraw(userid=self.user.getId(), balance=self.balance)
+            tra=Transaction(reciever=reciever, sender=self.ids, amount=amt, types='Withdraw')
             self.transactions.append(Transaction(reciever=reciever, sender=self.user.name, amount=amt, types='Withdraw'))
+            database.withdraw(userid=self.user.getId(), balance=self.balance,tr=tra)
             self.history(histlist)
             return self.balance
         
     def transferin(self, amt:int, reciever:"User"):
         if amt <= self.balance:
-            self.withdraw(amt,reciever=reciever.name)
-            reciever.wallet.deposit(amt,sender=self.user.name)
+            self.withdraw(amt,reciever=reciever.wallet.ids)
+            reciever.wallet.deposit(amt,sender=self.ids)

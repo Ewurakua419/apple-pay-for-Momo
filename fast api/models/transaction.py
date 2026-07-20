@@ -3,7 +3,7 @@ import uuid
 import json
 class Transaction:
     def __init__(self,amount, types, sender='cash', reciever='cash'):
-        
+        self.id=str(uuid.uuid4())
         self.sender=sender
         self.reciever=reciever
         self.amount=amount

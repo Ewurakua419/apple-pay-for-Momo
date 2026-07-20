@@ -8,8 +8,6 @@ import database
 class Bank:
     def __init__(self,name):
         self.name=name
-        self.sample=User('Sample',' ',unique_id='0000',ids='0000')
-        self.curr=self.sample
 
 
     def finduser(self, name):
@@ -17,7 +15,7 @@ class Bank:
         rows=database.search(name)
         if rows==None:
             print('User not found')
-            return False
+            return None
         else:
                 print('User found')
                 user=User(name=rows[1],password=rows[2],unique_id=rows[0],ids=rows[3], balance=rows[4])
@@ -27,12 +25,12 @@ class Bank:
     def register(self, name, password):
         if database.search(name)!=None:
             print('User already exists')
-            return False
+            return None
         user=User(name=name,password=password)
         database.register(name, userid=user.getId(),ids=user.wallet.getid(),balance=user.wallet.check_bal(), password=password)
-        self.curr=user
+        
         print("Successful")
-        return True
+        return user
 
 
 
@@ -40,35 +38,54 @@ class Bank:
         rows=self.finduser(name)
         if rows != None and rows != False:
                 if password==rows.password:
-                    self.curr=rows
-                    print('logged in')
-                    return True
+                    return rows
                 
                 print('login unsuccessful:Wrong password')
-                return False
+                return None
         print('login unsuccessful:Username not found')
-        return False
+        return None
     
-    def transfer(self,name, amt:int):
-        if self.curr is None:
-            print("login first")
-            return False
+    def transfer(self,sender_name,reciever_name, amt:int):
+        sender=self.finduser(sender_name)
+        if sender is None:
+            print("Sender not found")
+            return None
 
-        receiver = self.finduser(name)
-        if receiver == self.curr.name:
-            print("Cannot transfer to yourself.")
-            return False
+        receiver = self.finduser(reciever_name)
+        if receiver == sender:
+            print ("Cannot transfer to yourself.")
+            return None
         if not receiver:
-            return False
+            print( "Receiver not found")
+            return None
 
-        self.curr.wallet.transferin(amt, receiver)
+        sender.wallet.transferin(amt, receiver)
+        print ("Transfer successful")
+        return True
 
     def logout(self):
-        if self.curr==self.sample:
+        """if self.curr==self.sample:
                 print("login first")
                 return False
-        self.curr=User('Sample',' ',unique_id='0000',ids='0000')
+        self.curr=User('Sample',' ',unique_id='0000',ids='0000')"""
         print("Logged out.")
         return True
     
+    def deposit(self, username, amount):
+        user = self.finduser(username)
+
+        if user is None:
+            return None
+
+        user.wallet.deposit(amount)
+        return user.wallet.balance
+    
+    def withdraw(self, username, amount):
+        user = self.finduser(username)
+
+        if user is None:
+            return None
+
+        user.wallet.withdraw(amount)
+        return user.wallet.balance
    
