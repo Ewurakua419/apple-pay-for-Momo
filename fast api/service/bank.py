@@ -5,6 +5,7 @@ from models.user import User
 from models.transaction import Transaction
 from typing import Optional
 import database
+import auth
 class Bank:
     def __init__(self,name):
         self.name=name
@@ -26,8 +27,9 @@ class Bank:
         if database.search(name)!=None:
             print('User already exists')
             return None
-        user=User(name=name,password=password)
-        database.register(name, userid=user.getId(),ids=user.wallet.getid(),balance=user.wallet.check_bal(), password=password)
+        passworde=str(auth.encodere(password))
+        user=User(name=name,password=passworde)
+        database.register(name, userid=user.getId(),ids=user.wallet.getid(),balance=user.wallet.check_bal(), password=passworde)
         
         print("Successful")
         return user
@@ -37,7 +39,7 @@ class Bank:
     def login(self, name, password):
         rows=self.finduser(name)
         if rows != None and rows != False:
-                if password==rows.password:
+                if auth.decodere(password=password,h=rows.password):
                     return rows
                 
                 print('login unsuccessful:Wrong password')
