@@ -27,3 +27,18 @@ def decodere(password:str, h: Union[str, bytes]):
         ogByte = h
     return bcrypt.checkpw(checkByte, ogByte)# returns true if the hashes are the same , else false
 
+def create_token(user:User):
+    card={
+        "User id": user.unique_id,
+        "Username": user.name,
+        "exp": datetime.now()+timedelta(hours=2)
+    }# creates a kind of signin card
+
+    return jwt.encode(card, SECRET_KEY, algorithm="ES256")#creates a token
+
+def verify_token(token):
+    try:
+        payload=jwt.decode(token, SECRET_KEY, algorithms=["ES256"])
+        return payload
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):# if either the token has expired or if someone edits the token
+        return None

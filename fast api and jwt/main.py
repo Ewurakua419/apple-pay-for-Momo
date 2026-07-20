@@ -10,7 +10,7 @@ class RegisterRequest(BaseModel):
     password: str
 
 class DepositRequest(BaseModel):
-    username: str
+    token: str
     amount: int
 
 class WithdrawRequest(BaseModel):
@@ -34,7 +34,8 @@ def register(data: RegisterRequest):
 def login(data: RegisterRequest):
     success=bank.login(name=data.username,password=data.password)
     if success is not None:
-        return {"message": "Login successful", "username": data.username}
+        token=auth.create_token(success)
+        return {"message": "Login successful", "username": data.username, "access_token": token}
 
     return {"message": "Login unsuccessful"}
 
@@ -46,9 +47,11 @@ def finduser(username:str):
 
 
 @app.post("/deposit")
-def deposit(data: DepositRequest ):
-    
-    balance=bank.deposit(data.username,data.amount)
+def deposit(data: DepositRequest, ):
+    payload = auth.verify_token(data.token)
+    if payload is None:
+        raise HTTPException(401)
+    balance=bank.deposit(payload["Username"],data.amount)
     return {
         "message": "Deposit successful",
         "balance": balance
