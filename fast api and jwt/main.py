@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from service.bank import Bank
 import database
@@ -10,21 +10,30 @@ class RegisterRequest(BaseModel):
     password: str
 
 class DepositRequest(BaseModel):
-    token: str
     amount: int
 
 class WithdrawRequest(BaseModel):
-    token: str
     amount: int
 
 class TransferRequest(BaseModel):
-    token: str
     receiver: str
     amount: int
+def get_current_user(token: str):
+    payload = auth.verify_token(token)
+
+    if payload is None:
+        raise HTTPException(401)
+
+    return payload
 
 @app.post("/register")
 def register(data: RegisterRequest):
-    bank.register(name=data.username,password=data.password)
+    user=bank.register(name=data.username,password=data.password)
+    if user is None:# if user already exists
+        raise HTTPException(
+            status_code=409,
+            detail="Username already exists"
+        )
     return{
         "success": True,
         "username": data.username
@@ -35,9 +44,12 @@ def login(data: RegisterRequest):
     success=bank.login(name=data.username,password=data.password)
     if success is not None:
         token=auth.create_token(success)
-        return {"message": "Login successful", "username": data.username, "access_token": token}
+        return {"message": "Login successful", "username": data.username, "access_token": token, "token_type": "bearer"}
 
-    return {"message": "Login unsuccessful"}
+    raise HTTPException(
+    status_code=401,
+    detail="Invalid credentials"
+)
 
 @app.get("/user/{username}")
 def finduser(username:str):
@@ -47,8 +59,7 @@ def finduser(username:str):
 
 
 @app.post("/deposit")
-def deposit(data: DepositRequest, ):
-    payload = auth.verify_token(data.token)
+def deposit(data: DepositRequest, payload=Depends(get_current_user)):
     if payload is None:
         raise HTTPException(401)
     balance=bank.deposit(payload["Username"],data.amount)
@@ -60,8 +71,7 @@ def deposit(data: DepositRequest, ):
     
 
 @app.post("/withdraw")
-def withdraw(data:WithdrawRequest):
-    payload = auth.verify_token(data.token)
+def withdraw(data:WithdrawRequest,payload=Depends(get_current_user)):
     if payload is None:
         raise HTTPException(401)
     balance=bank.withdraw(payload["Username"],data.amount)
@@ -72,8 +82,8 @@ def withdraw(data:WithdrawRequest):
     }
     
 @app.post("/transfer")
-def transfer(item:TransferRequest):
-    payload = auth.verify_token(item.token)
+def transfer(item:TransferRequest, payload=
+             Depends(get_current_user)):
     if payload is None:
         raise HTTPException(401)
     bank.transfer(sender_name=payload["Username"],reciever_name=item.receiver,amt=item.amount)
