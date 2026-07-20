@@ -3,6 +3,11 @@ from pydantic import BaseModel
 from service.bank import Bank
 import database
 import auth
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="login"
+)
 bank=Bank("Ecobank")
 app = FastAPI()
 class RegisterRequest(BaseModel):
@@ -18,7 +23,8 @@ class WithdrawRequest(BaseModel):
 class TransferRequest(BaseModel):
     receiver: str
     amount: int
-def get_current_user(token: str):
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
     payload = auth.verify_token(token)
 
     if payload is None:
@@ -34,9 +40,10 @@ def register(data: RegisterRequest):
             status_code=409,
             detail="Username already exists"
         )
+    token=auth.create_token(user)
     return{
-        "success": True,
-        "username": data.username
+        "access_token": token, 
+        "token_type": "bearer"
     }
 
 @app.post("/login")
@@ -44,7 +51,7 @@ def login(data: RegisterRequest):
     success=bank.login(name=data.username,password=data.password)
     if success is not None:
         token=auth.create_token(success)
-        return {"message": "Login successful", "username": data.username, "access_token": token, "token_type": "bearer"}
+        return {"message": "Login successful",  "access_token": token, "token_type": "bearer"}
 
     raise HTTPException(
     status_code=401,
