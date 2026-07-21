@@ -40,10 +40,9 @@ def register(data: RegisterRequest):
             status_code=409,
             detail="Username already exists"
         )
-    token=auth.create_token(user)
     return{
-        "access_token": token, 
-        "token_type": "bearer"
+        "message": "Account created",
+        "username": user.name
     }
 
 @app.post("/login")
@@ -67,8 +66,6 @@ def finduser(username:str):
 
 @app.post("/deposit")
 def deposit(data: DepositRequest, payload=Depends(get_current_user)):
-    if payload is None:
-        raise HTTPException(401)
     balance=bank.deposit(payload["Username"],data.amount)
     return {
         "message": "Deposit successful",
@@ -79,8 +76,6 @@ def deposit(data: DepositRequest, payload=Depends(get_current_user)):
 
 @app.post("/withdraw")
 def withdraw(data:WithdrawRequest,payload=Depends(get_current_user)):
-    if payload is None:
-        raise HTTPException(401)
     balance=bank.withdraw(payload["Username"],data.amount)
     
     return{
@@ -91,8 +86,6 @@ def withdraw(data:WithdrawRequest,payload=Depends(get_current_user)):
 @app.post("/transfer")
 def transfer(item:TransferRequest, payload=
              Depends(get_current_user)):
-    if payload is None:
-        raise HTTPException(401)
     bank.transfer(sender_name=payload["Username"],reciever_name=item.receiver,amt=item.amount)
     return {
         "message": "Transfer completed",
